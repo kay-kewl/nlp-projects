@@ -23,6 +23,8 @@ class Vocab:
         return Vocab(list(tokens))
 
     def tokenize(self, string):
+        if not isinstance(string, str):
+            return list(string)
         return string.split()
 
     def to_matrix(self, lines, max_len=None, dtype="int32", batch_first=True):
@@ -52,17 +54,19 @@ class Vocab:
 
 
 def compute_loss(model, inp, out, **flags):
-    """
-    Compute loss (float32 scalar)
-    """
-    mask = model.out_voc.compute_mask(out)
-    targets_one_hot = F.one_hot(out, len(model.out_voc)).to(torch.float32)
-
     logits_seq = model(inp, out)
-    logprobs_seq = torch.log_softmax(logits_seq, dim=-1)
-    logp_out = (logprobs_seq * targets_one_hot).sum(dim=-1)
-
-    return -(logp_out * mask).sum() / mask.sum()
+    
+    mask = out != model.out_voc.eos_ix
+    first_eos_mask = torch.cat([torch.ones_like(mask[:, :1]), mask[:, :-1]], dim=1) & ~mask
+    mask = mask | first_eos_mask
+    
+    loss = F.cross_entropy(
+        logits_seq.reshape(-1, len(model.out_voc)), 
+        out.long().reshape(-1), 
+        reduction='none'
+    )
+    
+    return (loss * mask.reshape(-1)).sum() / mask.sum()
 
 
 def compute_bleu(model, inp_lines, out_lines, bpe_sep="@@ ", **flags):
@@ -70,12 +74,18 @@ def compute_bleu(model, inp_lines, out_lines, bpe_sep="@@ ", **flags):
     with torch.no_grad():
         translations, _ = model.translate_lines(inp_lines, max_len=100)
         translations = [line.replace(bpe_sep, "") for line in translations]
-        actual = [line.replace(bpe_sep, "") for line in out_lines]
+        
+        actual =[]
+        for line in out_lines:
+            if not isinstance(line, str):
+                line = " ".join(line)
+            actual.append(line.replace(bpe_sep, ""))
+
         return (
             corpus_bleu(
                 [[ref.split()] for ref in actual],
                 [trans.split() for trans in translations],
-                smoothing_function=lambda precisions, **kw: [
+                smoothing_function=lambda precisions, **kw:[
                     p + 1.0 / p.denominator for p in precisions
                 ],
             )

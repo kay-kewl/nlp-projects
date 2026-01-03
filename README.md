@@ -23,13 +23,18 @@ A collection of Natural Language Processing projects focusing on the transition 
     git clone https://github.com/kay-kewl/nlp-projects.git
     cd nlp-projects
   ```
-  
-2. Install dependencies:
+
+2. Create and activate a virtual environment:
+  ```bash
+    python -m venv venv
+
+    # windows 
+    .\venv\Scripts\activate
+    # macos/linux
+    source venv/bin/activate
   ```
+  
+3. Install dependencies:
+  ```bash
     pip install -r requirements.txt
-  ```
-  
-3. Download datasets
-  ```
-    ./data/download.sh
   ```

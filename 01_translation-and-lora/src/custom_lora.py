@@ -3,14 +3,13 @@ import torch.nn as nn
 
 
 class LoRALayer(nn.Module):
-    """
-    Manual implementation of Low-Rank Adaptation (LoRA).
-    Wraps an existing linear layer to inject trainable rank-decomposition matrices.
-    """
-
-    def __init__(self, module: nn.Linear, rank: int):
+    def __init__(self, module: nn.Linear, rank: int, alpha: float = 1.0):
         super().__init__()
         self.module = module
+        self.scaling = alpha / rank
+        
+        self.module.requires_grad_(False)
+        
         self.adapter_A = nn.Parameter(
             torch.empty(module.in_features, rank, device=module.weight.device)
         )
@@ -20,9 +19,6 @@ class LoRALayer(nn.Module):
         )
 
     def forward(self, input):
-        # base model output is frozen
         base_out = self.module(input)
-
-        # adapter output is trainable
         adapter_out = (input @ self.adapter_A) @ self.adapter_B
-        return base_out + adapter_out
+        return base_out + (adapter_out * self.scaling)
