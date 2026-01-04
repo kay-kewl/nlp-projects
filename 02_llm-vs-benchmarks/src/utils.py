@@ -1,3 +1,5 @@
+import pandas as pd
+
 def read_bsnlp_document(path):
     lines = path.read_text(encoding="utf-8").splitlines()
     doc_id = lines[0].strip()

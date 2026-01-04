@@ -27,3 +27,17 @@ def parse_deepseek_response(response_text):
                 label = parts[1].strip().upper()
                 predictions[ent_name] = label
     return predictions
+
+def map_deepseek_responses(raw_responses, df, label_encoder, default_class="PER"):
+    df_mapped = df.copy()
+    df_mapped["deepseek_pred"] = default_class
+    known_classes = set(label_encoder.classes_)
+    
+    for doc_id, text_resp in raw_responses.items():
+        parsed = parse_deepseek_response(text_resp)
+        mask = df_mapped["document_id"] == doc_id
+        
+        df_mapped.loc[mask, "deepseek_pred"] = df_mapped.loc[mask, "entity"].apply(
+            lambda x: parsed.get(x, default_class) if parsed.get(x) in known_classes else default_class
+        )
+    return df_mapped

@@ -9,7 +9,7 @@ While Large Language Models are powerful, they are expensive and can be inconsis
 *   **Analysis:** Compared models on Bias-Variance tradeoff, interpretability, feature weights, and handling of unseen entities.
 
 ## 3. Key Findings
-*   **High Variance in Classical Models:** Linear models achieved ~0.91 F1 on seen patterns but struggled with generalization due to small training data, High Variance.
+*   **High Variance in Classical Models:** Linear models achieved ~0.93 F1 on seen patterns but struggled with generalization due to small training data, High Variance.
 *   **LLM Generalization:** DeepSeek with F1 ~0.78 underperformed metrics-wise due to formatting strictness but correctly identified entities unseen in the training set (better generalization).
 *   **Optimization:** In the AG News benchmark, BoW + SVM with RBF Kernel slightly outperformed TF-IDF + Logistic Regression, proving that complex kernels are viable for dense text classification.
 
